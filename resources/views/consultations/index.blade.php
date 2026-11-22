@@ -2,7 +2,11 @@
 @section('title', 'Consultations')
 @section('content')
 @php $u = auth()->user(); $isPatient = $u->hasRole('patient'); @endphp
-<x-page-header :title="$isPatient ? 'Visit history' : 'Consultations'" subtitle="Diagnoses, treatment and prescriptions, newest first." />
+<x-page-header :title="$isPatient ? 'Visit history' : 'Consultations'" subtitle="Diagnoses, treatment and prescriptions, newest first.">
+    @if($u->hasRole('doctor'))
+        <a href="{{ route('consultations.create') }}" class="btn btn-primary"><i class="fa-solid fa-plus" aria-hidden="true"></i>New consultation</a>
+    @endif
+</x-page-header>
 
 <div class="card">
     <div class="table-responsive">

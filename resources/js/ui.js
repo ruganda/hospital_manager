@@ -111,7 +111,54 @@ function initAvailability() {
     select(0);
 }
 
+/* ------------------------------------------------------------------ Mobile Money
+ * Pending requests carry data-momo-poll="<status url>": poll every 4 s and reload once settled.
+ * The phone field (data-momo-phone) pre-selects MTN / Airtel from the number's prefix.
+ */
+function initMobileMoney() {
+    const pending = document.querySelectorAll('[data-momo-poll]');
+    if (pending.length) {
+        const started = Date.now();
+        const tick = async () => {
+            if (Date.now() - started > 10 * 60 * 1000) return; // stop after 10 minutes; "Check now" still works
+            for (const el of pending) {
+                try {
+                    const { data } = await window.axios.get(el.dataset.momoPoll);
+                    if (!data.pending) { window.location.reload(); return; }
+                    const msg = el.querySelector('[data-momo-message]');
+                    if (msg && data.message) msg.textContent = data.message;
+                } catch (e) { /* network hiccup: try again next tick */ }
+            }
+            setTimeout(tick, 4000);
+        };
+        setTimeout(tick, 4000);
+    }
+
+    // Every Mobile Money number field pre-selects its own form's network radio from the prefix.
+    document.querySelectorAll('[data-momo-phone]').forEach((phone) => {
+        const scope = phone.closest('form') || document;
+        phone.addEventListener('input', () => {
+            const digits = phone.value.replace(/\D/g, '');
+            const local = digits.startsWith('256') ? '0' + digits.slice(3) : digits;
+            const prefix = local.slice(0, 3);
+            const net = ['076', '077', '078', '039', '031'].includes(prefix) ? 'MTN' : (['070', '074', '075', '020'].includes(prefix) ? 'AIRTEL' : null);
+            const radio = net && scope.querySelector(`input[type=radio][name$="network"][value="${net}"]`);
+            if (radio) radio.checked = true;
+        });
+    });
+
+    // "Request payment on save" toggles its fields (consultation form).
+    document.querySelectorAll('[data-toggle-target]').forEach((box) => {
+        const target = document.querySelector(box.dataset.toggleTarget);
+        if (!target) return;
+        const sync = () => { target.hidden = !box.checked; };
+        box.addEventListener('change', sync);
+        sync();
+    });
+}
+
 export function initUi() {
+    initMobileMoney();
     window.ccCountUp = (el) => countUp(el, 700);
     initCountUp();
     initFilterTabs();

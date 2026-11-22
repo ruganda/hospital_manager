@@ -52,6 +52,7 @@
                     <li>
                         <div class="flex-grow-1 min-w-0"><a href="{{ route('invoices.show', $inv) }}" class="cc-cell-main">{{ $inv->invoice_no }}</a><div class="cc-cell-sub text-truncate">{{ $inv->description }}</div></div>
                         <div class="text-end"><div class="cc-money">{{ money($inv->amount) }}</div><x-status-badge :status="$inv->status" /></div>
+                        @if($inv->balance > 0)<a href="{{ route('invoices.show', $inv) }}#mobile-money" class="btn btn-outline-primary btn-sm">Pay</a>@endif
                     </li>
                 @empty
                     <li class="d-block"><x-empty message="No bills yet." icon="fa-file-invoice" /></li>

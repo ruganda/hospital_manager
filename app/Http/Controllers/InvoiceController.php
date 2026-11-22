@@ -49,7 +49,7 @@ class InvoiceController extends Controller
     public function show(Invoice $invoice): View
     {
         $this->authorize('view', $invoice);
-        $invoice->load('patient.user', 'appointment.doctor.user', 'payments.receiver');
+        $invoice->load('patient.user', 'appointment.doctor.user', 'payments.receiver', 'mobileMoneyRequests.payment');
 
         return view('invoices.show', ['invoice' => $invoice, 'methods' => PaymentMethod::cases()]);
     }
@@ -88,7 +88,7 @@ class InvoiceController extends Controller
     public function pdf(Invoice $invoice): Response
     {
         $this->authorize('view', $invoice);
-        $invoice->load('patient.user', 'appointment.doctor.user', 'payments.receiver');
+        $invoice->load('patient.user', 'appointment.doctor.user', 'payments.receiver', 'mobileMoneyRequests.payment');
 
         return Pdf::loadView('invoices.pdf', compact('invoice'))->download($invoice->invoice_no.'.pdf');
     }

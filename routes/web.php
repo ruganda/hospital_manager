@@ -7,7 +7,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\DoctorScheduleController;
+use App\Http\Controllers\FlutterwaveWebhookController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\MobileMoneyController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
@@ -17,6 +19,9 @@ use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', WelcomeController::class)->name('home');
+
+// Payment provider callbacks (no session, no CSRF; authenticated by a shared secret header)
+Route::post('webhooks/flutterwave', FlutterwaveWebhookController::class)->middleware('throttle:120,1')->name('webhooks.flutterwave');
 
 Route::middleware('auth')->group(function () {
 
@@ -69,6 +74,11 @@ Route::middleware('auth')->group(function () {
     });
     Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
     Route::resource('invoices', InvoiceController::class)->middleware('role:admin,cashier,receptionist,patient');
+
+    // Mobile Money (MTN / Airtel via Flutterwave): who may start one is decided by InvoicePolicy::payMobileMoney
+    Route::post('invoices/{invoice}/mobile-money', [MobileMoneyController::class, 'store'])->middleware('throttle:10,1')->name('mobile-money.store');
+    Route::get('mobile-money/{mobileMoney}/status', [MobileMoneyController::class, 'status'])->middleware('throttle:60,1')->name('mobile-money.status');
+    Route::post('mobile-money/{mobileMoney}/refresh', [MobileMoneyController::class, 'refresh'])->middleware('throttle:20,1')->name('mobile-money.refresh');
 
     // ---------------------------------------------------------------- reports
     Route::middleware('role:admin,receptionist,doctor,cashier')->group(function () {

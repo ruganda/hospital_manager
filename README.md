@@ -11,40 +11,34 @@ and management reporting.
 
 ## Screenshots
 
-A selection of pages. **[See all 83 screenshots, organised by role →](screenshots/README.md)**
+The key screens, each tied to a clinic requirement. **[All 15 desktop and 5 mobile screens, with the requirement each one shows →](screenshots/README.md)** · A slide deck of them is in [`presentation/`](presentation/).
 
 <table>
   <tr>
-    <td width="50%"><a href="screenshots/02-admin/01-dashboard.png"><img src="screenshots/02-admin/01-dashboard.png" alt="Administrator dashboard"></a><br><sub><b>Administrator dashboard</b>: key figures, appointments chart with a 7/30/90-day switch, today's queue</sub></td>
-    <td width="50%"><a href="screenshots/03-receptionist/01-dashboard.png"><img src="screenshots/03-receptionist/01-dashboard.png" alt="Receptionist dashboard"></a><br><sub><b>Front desk</b>: today's queue with one-click check-in and doctors on duty</sub></td>
+    <td width="50%"><a href="screenshots/desktop/03-admin-dashboard.png"><img src="screenshots/desktop/03-admin-dashboard.png" alt="Admin dashboard"></a><br><sub><b>Admin dashboard</b>: management overview: appointments, revenue, attendance</sub></td>
+    <td width="50%"><a href="screenshots/desktop/05-front-desk-dashboard.png"><img src="screenshots/desktop/05-front-desk-dashboard.png" alt="Front desk"></a><br><sub><b>Front desk</b>: today's queue with one-click check-in</sub></td>
   </tr>
   <tr>
-    <td><a href="screenshots/02-admin/03-appointment-book.png"><img src="screenshots/02-admin/03-appointment-book.png" alt="Book an appointment"></a><br><sub><b>Book an appointment</b>: only free slots from the doctor's schedule are offered</sub></td>
-    <td><a href="screenshots/04-doctor/01-dashboard.png"><img src="screenshots/04-doctor/01-dashboard.png" alt="Doctor dashboard"></a><br><sub><b>Doctor dashboard</b>: today's patients, what's coming up, outcomes</sub></td>
+    <td width="50%"><a href="screenshots/desktop/06-book-appointment-no-double-booking.png"><img src="screenshots/desktop/06-book-appointment-no-double-booking.png" alt="Book appointment"></a><br><sub><b>Book appointment</b>: booked slots are struck through, so no double-booking</sub></td>
+    <td width="50%"><a href="screenshots/desktop/08-register-patient-duplicate-warning.png"><img src="screenshots/desktop/08-register-patient-duplicate-warning.png" alt="Register patient"></a><br><sub><b>Register patient</b>: a matching phone or name + birth date is flagged as a duplicate</sub></td>
   </tr>
   <tr>
-    <td><a href="screenshots/02-admin/08-patient-record.png"><img src="screenshots/02-admin/08-patient-record.png" alt="Patient record"></a><br><sub><b>Patient record</b>: allergies, treatment timeline, appointments, billing</sub></td>
-    <td><a href="screenshots/04-doctor/04-consultation-notes-form.png"><img src="screenshots/04-doctor/04-consultation-notes-form.png" alt="Consultation notes"></a><br><sub><b>Consultation notes</b>: saving completes the visit and raises the invoice</sub></td>
+    <td width="50%"><a href="screenshots/desktop/09-patient-record-treatment-history.png"><img src="screenshots/desktop/09-patient-record-treatment-history.png" alt="Patient record"></a><br><sub><b>Patient record</b>: treatment timeline and allergies for the doctor</sub></td>
+    <td width="50%"><a href="screenshots/desktop/11-consultation-notes.png"><img src="screenshots/desktop/11-consultation-notes.png" alt="Consultation notes"></a><br><sub><b>Consultation notes</b>: saving completes the visit and raises the invoice</sub></td>
   </tr>
   <tr>
-    <td><a href="screenshots/05-cashier/01-dashboard.png"><img src="screenshots/05-cashier/01-dashboard.png" alt="Cashier dashboard"></a><br><sub><b>Cash desk</b>: collections, invoices awaiting payment, payment methods</sub></td>
-    <td><a href="screenshots/02-admin/28-invoice-open.png"><img src="screenshots/02-admin/28-invoice-open.png" alt="Invoice"></a><br><sub><b>Invoice</b>: payment history and recording a payment by cash, Mobile Money, card or insurance</sub></td>
-  </tr>
-  <tr>
-    <td><a href="screenshots/02-admin/13-schedules.png"><img src="screenshots/02-admin/13-schedules.png" alt="Doctor schedules"></a><br><sub><b>Doctor schedules</b>: weekly working hours that generate the bookable slots</sub></td>
-    <td><a href="screenshots/06-patient/01-dashboard.png"><img src="screenshots/06-patient/01-dashboard.png" alt="Patient portal"></a><br><sub><b>Patient portal</b>: next appointment, bills and visit history</sub></td>
-  </tr>
-  <tr>
-    <td><a href="screenshots/01-public/02-login.png"><img src="screenshots/01-public/02-login.png" alt="Log in"></a><br><sub><b>Log in</b></sub></td>
-    <td><a href="screenshots/02-admin/36-reports.png"><img src="screenshots/02-admin/36-reports.png" alt="Reports"></a><br><sub><b>Reports</b>: PDF, Excel and CSV exports</sub></td>
+    <td width="50%"><a href="screenshots/desktop/13-cash-desk-dashboard.png"><img src="screenshots/desktop/13-cash-desk-dashboard.png" alt="Cash desk"></a><br><sub><b>Cash desk</b>: who has paid and what is outstanding</sub></td>
+    <td width="50%"><a href="screenshots/desktop/14-invoice-and-payment.png"><img src="screenshots/desktop/14-invoice-and-payment.png" alt="Invoice"></a><br><sub><b>Invoice</b>: pay by cash, Mobile Money, card or insurance</sub></td>
   </tr>
 </table>
 
 <p>
-  <a href="screenshots/01-public/06-welcome-mobile.png"><img src="screenshots/01-public/06-welcome-mobile.png" alt="Home page on a phone" width="180"></a>
-  <a href="screenshots/02-admin/39-dashboard-mobile.png"><img src="screenshots/02-admin/39-dashboard-mobile.png" alt="Admin dashboard on a phone" width="180"></a>
-  <a href="screenshots/06-patient/11-dashboard-mobile.png"><img src="screenshots/06-patient/11-dashboard-mobile.png" alt="Patient portal on a phone" width="180"></a>
-  <br><sub>Works on phones too: home page, admin dashboard and patient portal at 390 px.</sub>
+  <a href="screenshots/mobile/01-home-page.png"><img src="screenshots/mobile/01-home-page.png" alt="Home page on a phone" width="150"></a>
+  <a href="screenshots/mobile/02-log-in.png"><img src="screenshots/mobile/02-log-in.png" alt="Log in on a phone" width="150"></a>
+  <a href="screenshots/mobile/03-front-desk-dashboard.png"><img src="screenshots/mobile/03-front-desk-dashboard.png" alt="Front desk on a phone" width="150"></a>
+  <a href="screenshots/mobile/04-book-appointment.png"><img src="screenshots/mobile/04-book-appointment.png" alt="Book appointment on a phone" width="150"></a>
+  <a href="screenshots/mobile/05-patient-portal.png"><img src="screenshots/mobile/05-patient-portal.png" alt="Patient portal on a phone" width="150"></a>
+  <br><sub>On a phone: home page, log in, front desk, booking and the patient portal.</sub>
 </p>
 
 ---
@@ -175,6 +169,23 @@ php artisan serve      # http://127.0.0.1:8000
 
 The seed data is generated relative to **today's date**. Re-run `php artisan migrate:fresh --seed`
 whenever you want "today" on the dashboards to be full again.
+
+### Mobile Money payments (MTN / Airtel via Flutterwave)
+
+Cashiers can send a payment request to the patient's phone from any unpaid invoice, and patients can pay their own bills from the portal (**Pay**). The patient approves with their Mobile Money PIN; the invoice updates by itself once Flutterwave confirms the payment.
+
+**Demo mode (default, no keys needed).** With `MOBILE_MONEY_DRIVER=fake`, no money moves: requests are approved after a few seconds, and numbers ending in `000` are declined, so you can show both outcomes.
+
+**Flutterwave sandbox / live.** Create a Flutterwave account, then in `.env`:
+
+```dotenv
+MOBILE_MONEY_DRIVER=flutterwave
+FLW_SECRET_KEY=FLWSECK_TEST-xxxxxxxxxxxx   # Settings → API keys (test keys for the sandbox)
+FLW_SECRET_HASH=any-long-random-string     # Settings → Webhooks → Secret hash (same value)
+FLW_BASE_URL=https://api.flutterwave.com/v3
+```
+
+Then set the webhook URL in the Flutterwave dashboard to `https://<your-domain>/webhooks/flutterwave` and run `php artisan config:clear`. Every webhook is checked against the secret hash and re-verified with the Flutterwave API before a payment is recorded; if no webhook arrives (for example on `localhost`), the invoice page checks the status itself every few seconds, and staff can press **Check now**.
 
 ## 4. Demo accounts (seeded users)
 

@@ -3,6 +3,10 @@
 @section('content')
 @php
     $canManage = auth()->user()->hasRole('admin', 'cashier');
+    $canMomo = auth()->user()->can('payMobileMoney', $invoice);
+    $momoRequests = $invoice->mobileMoneyRequests;
+    $patientPhone = $invoice->patient->user->phone;
+    $guessNetwork = \App\Enums\MobileMoneyNetwork::guessFromPhone($patientPhone) ?? \App\Enums\MobileMoneyNetwork::Mtn;
     $paidPct = $invoice->amount > 0 ? min(100, round($invoice->amount_paid / $invoice->amount * 100)) : 0;
 @endphp
 <div class="cc-page-head">
@@ -14,7 +18,7 @@
     <div class="cc-page-actions">
         <a href="{{ route('invoices.pdf', $invoice) }}" class="btn btn-white"><i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>PDF</a>
         @if($canManage)<a href="{{ route('invoices.edit', $invoice) }}" class="btn btn-white"><i class="fa-solid fa-pen" aria-hidden="true"></i>Edit</a>@endif
-        @if($canManage && $invoice->balance > 0)<a href="#record-payment" class="btn btn-primary"><i class="fa-solid fa-plus" aria-hidden="true"></i>Add payment</a>@endif
+        @if($canMomo)<a href="#mobile-money" class="btn btn-primary"><i class="fa-solid fa-mobile-screen" aria-hidden="true"></i>{{ $canManage ? 'Request Mobile Money' : 'Pay with Mobile Money' }}</a>@endif
     </div>
 </div>
 
@@ -82,20 +86,44 @@
         </section>
     </div>
 
-    @if($canManage && $invoice->balance > 0)
-        <div class="col-xl-5">
-            <form method="POST" action="{{ route('payments.store') }}" class="card" id="record-payment">
-                @csrf
-                <input type="hidden" name="invoice_id" value="{{ $invoice->id }}">
-                <div class="card-header"><h2 class="card-title">Record a payment</h2><span class="small text-muted">{{ money($invoice->balance) }} due</span></div>
-                <div class="card-body">
-                    @include('payments._method-picker', ['selected' => old('method', 'cash')])
-                    <x-input name="amount" type="number" step="any" min="0.01" :max="$invoice->balance" :label="'Amount ('.config('clinic.currency').')'" :value="$invoice->balance" required class="tabular" />
-                    <x-input name="reference" label="Reference / transaction ID" placeholder="e.g. MoMo transaction ID" />
-                    <x-input name="paid_at" type="datetime-local" label="Paid at" :value="now()->format('Y-m-d\TH:i')" required col="mb-0" />
-                </div>
-                <div class="card-footer"><button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-check" aria-hidden="true"></i>Save payment</button></div>
-            </form>
+    @if($canMomo || $momoRequests->isNotEmpty() || ($canManage && $invoice->balance > 0))
+        <div class="col-xl-5 d-flex flex-column gap-4">
+            @if($canMomo)
+                <form method="POST" action="{{ route('mobile-money.store', $invoice) }}" class="card" id="mobile-money">
+                    @csrf
+                    <div class="card-header"><h2 class="card-title">{{ $canManage ? 'Mobile Money' : 'Pay with Mobile Money' }}</h2><span class="small text-muted">{{ money($invoice->balance) }} due</span></div>
+                    <div class="card-body">
+                        <p class="small text-muted mt-0">{{ $canManage ? 'The patient gets a prompt on their phone and approves it with their PIN. The invoice updates by itself once paid.' : 'You will get a prompt on your phone. Approve it with your Mobile Money PIN and this bill updates by itself.' }}</p>
+                        @include('mobile-money._fields', ['prefix' => '', 'phone' => $patientPhone])
+                        <x-input name="amount" type="number" step="1" min="1" :max="(int) ceil($invoice->balance)" :label="'Amount ('.config('clinic.currency').')'" :value="(int) round($invoice->balance)" required class="tabular" col="mb-0" />
+                    </div>
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i>{{ $canManage ? 'Send payment request' : 'Pay now' }}</button>
+                        @if(config('services.mobile_money.driver') === 'fake')
+                            <div class="small text-muted text-center mt-2">Demo mode: no real money moves. Payments approve after a few seconds; numbers ending in 000 are declined.</div>
+                        @endif
+                    </div>
+                </form>
+            @endif
+
+            @if($momoRequests->isNotEmpty())
+                @include('mobile-money._requests', ['requests' => $momoRequests])
+            @endif
+
+            @if($canManage && $invoice->balance > 0)
+                <form method="POST" action="{{ route('payments.store') }}" class="card" id="record-payment">
+                    @csrf
+                    <input type="hidden" name="invoice_id" value="{{ $invoice->id }}">
+                    <div class="card-header"><h2 class="card-title">Record a payment</h2><span class="small text-muted">Cash, card, insurance</span></div>
+                    <div class="card-body">
+                        @include('payments._method-picker', ['selected' => old('method', 'cash')])
+                        <x-input name="amount" type="number" step="any" min="0.01" :max="$invoice->balance" :label="'Amount ('.config('clinic.currency').')'" :value="$invoice->balance" required class="tabular" id="manual_amount" />
+                        <x-input name="reference" label="Reference / transaction ID" placeholder="e.g. receipt or MoMo transaction ID" />
+                        <x-input name="paid_at" type="datetime-local" label="Paid at" :value="now()->format('Y-m-d\TH:i')" required col="mb-0" />
+                    </div>
+                    <div class="card-footer"><button type="submit" class="btn btn-white w-100"><i class="fa-solid fa-check" aria-hidden="true"></i>Save payment</button></div>
+                </form>
+            @endif
         </div>
     @endif
 </div>

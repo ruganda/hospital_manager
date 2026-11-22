@@ -19,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             EnsureAccountIsActive::class,
         ]);
+        // Flutterwave posts payment notifications here; they are authenticated by the verif-hash header instead.
+        $middleware->validateCsrfTokens(except: ['webhooks/flutterwave']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

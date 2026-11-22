@@ -19,13 +19,17 @@
     @endforeach
 </div>
 
-@if ($errors->any())
+@php
+    // Errors that a form already shows in context (e.g. the duplicate-patient callout) are left out of the summary.
+    $summaryErrors = collect($errors->getMessages())->except(['duplicate'])->flatten();
+@endphp
+@if ($summaryErrors->isNotEmpty())
     <div class="cc-callout danger mb-4" role="alert">
         <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
         <div>
             <div class="fw-semibold mb-1">Please fix the following:</div>
             <ul class="mb-0 ps-3">
-                @foreach ($errors->all() as $error)
+                @foreach ($summaryErrors as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>

@@ -51,6 +51,11 @@ class Invoice extends Model
         return $this->hasMany(Payment::class)->latest('paid_at');
     }
 
+    public function mobileMoneyRequests(): HasMany
+    {
+        return $this->hasMany(MobileMoneyRequest::class)->latest();
+    }
+
     public function getBalanceAttribute(): float
     {
         return round((float) $this->amount - (float) $this->amount_paid, 2);

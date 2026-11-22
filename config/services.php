@@ -28,6 +28,18 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Mobile Money (MTN / Airtel) via Flutterwave. Driver "fake" simulates payments with no keys (demo / local).
+    'mobile_money' => [
+        'driver' => env('MOBILE_MONEY_DRIVER', 'fake'), // fake | flutterwave
+    ],
+
+    'flutterwave' => [
+        'secret_key' => env('FLW_SECRET_KEY'),           // dashboard → Settings → API keys (test keys start FLWSECK_TEST-)
+        'secret_hash' => env('FLW_SECRET_HASH'),         // dashboard → Settings → Webhooks → "Secret hash" (any string you choose)
+        'base_url' => env('FLW_BASE_URL', 'https://api.flutterwave.com/v3'),
+        'timeout' => (int) env('FLW_TIMEOUT', 30),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

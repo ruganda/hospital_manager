@@ -23,6 +23,41 @@
                     <x-input name="follow_up_date" type="date" label="Follow-up date" :value="$consultation->follow_up_date?->toDateString()" :min="today()->addDay()->toDateString()" help="The patient sees this in their portal." col="col-md-5 mb-3" />
                     <x-textarea name="notes" label="Additional notes" :value="$consultation->notes" rows="2" col="col-md-7 mb-3" />
                 </div>
+
+                {{-- Payment: the visit's invoice (raised on save) can be sent to the patient's Mobile Money --}}
+                @php
+                    $fee = $invoice ? $invoice->balance : (float) $appointment->doctor->consultation_fee;
+                    $pendingMomo = $invoice?->mobileMoneyRequests->first(fn ($r) => $r->isPending());
+                    $canOffer = ! $invoice || ($invoice->balance > 0 && ! $pendingMomo);
+                @endphp
+                <div class="cc-divider"></div>
+                <section aria-labelledby="payment-heading">
+                    <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-2">
+                        <h2 class="h6 fw-semibold m-0" id="payment-heading">Payment</h2>
+                        @if($invoice)
+                            <span class="d-flex align-items-center gap-2 small"><span class="text-muted">{{ $invoice->invoice_no }}</span><x-status-badge :status="$invoice->status" /></span>
+                        @else
+                            <span class="small text-muted">Invoice of {{ money($fee) }} is raised on save</span>
+                        @endif
+                    </div>
+
+                    @if($pendingMomo)
+                        <div class="cc-callout info small"><i class="fa-solid fa-mobile-screen" aria-hidden="true"></i><div>A Mobile Money request for {{ money($pendingMomo->amount) }} to {{ $pendingMomo->display_phone }} is waiting for the patient to approve.</div></div>
+                    @elseif($invoice && $invoice->balance <= 0)
+                        <div class="cc-callout ok small"><i class="fa-solid fa-circle-check" aria-hidden="true"></i><div>This visit is paid.</div></div>
+                    @elseif($canOffer)
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" role="switch" name="request_payment" value="1" id="request_payment" data-toggle-target="#momo-fields" @checked(old('request_payment'))>
+                            <label class="form-check-label" for="request_payment">Send a Mobile Money request for <strong>{{ money($fee) }}</strong> to the patient when I save</label>
+                        </div>
+                        <div id="momo-fields" class="row" @unless(old('request_payment')) hidden @endunless>
+                            <div class="col-md-12">
+                                @include('mobile-money._fields', ['prefix' => 'momo_', 'phone' => $p->user->phone, 'col' => 'mb-1'])
+                            </div>
+                            <div class="col-12 small text-muted">The patient approves it on their phone with their PIN; the invoice updates by itself. They can also pay at the cash desk.</div>
+                        </div>
+                    @endif
+                </section>
             </div>
             <div class="card-footer d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span class="small text-muted">@unless($consultation->exists)Saving marks the visit completed and sends the consultation fee to billing.@endunless</span>
