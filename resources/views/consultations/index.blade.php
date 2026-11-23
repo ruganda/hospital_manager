@@ -3,7 +3,7 @@
 @section('content')
 @php $u = auth()->user(); $isPatient = $u->hasRole('patient'); @endphp
 <x-page-header :title="$isPatient ? 'Visit history' : 'Consultations'" subtitle="Diagnoses, treatment and prescriptions, newest first.">
-    @if($u->hasRole('doctor'))
+    @if($u->hasRole('doctor', 'admin'))
         <a href="{{ route('consultations.create') }}" class="btn btn-primary"><i class="fa-solid fa-plus" aria-hidden="true"></i>New consultation</a>
     @endif
 </x-page-header>

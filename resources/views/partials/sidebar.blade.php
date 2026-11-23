@@ -52,6 +52,7 @@
                 {!! $link('invoices.index', 'fa-file-invoice-dollar', 'Invoices', 'invoices.*') !!}
                 @if($u->hasRole('admin', 'cashier'))
                     {!! $link('payments.index', 'fa-money-bill-wave', 'Payments', ['payments.index', 'payments.edit']) !!}
+                    {!! $link('mobile-money.index', 'fa-mobile-screen', 'Mobile Money', 'mobile-money.index') !!}
                     {!! $link('payments.create', 'fa-cash-register', 'Record payment', 'payments.create') !!}
                 @endif
             </ul>

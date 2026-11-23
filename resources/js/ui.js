@@ -147,6 +147,19 @@ function initMobileMoney() {
         });
     });
 
+    // Choosing an invoice fills in that patient's number and the balance (Payments → Record payment).
+    document.querySelectorAll('[data-momo-invoice]').forEach((select) => {
+        const form = select.closest('form');
+        select.addEventListener('change', () => {
+            const opt = select.selectedOptions[0];
+            if (!opt || !opt.value) return;
+            const phone = form.querySelector('[data-momo-phone]');
+            const amount = form.querySelector('[name="amount"]');
+            if (phone && opt.dataset.phone) { phone.value = opt.dataset.phone; phone.dispatchEvent(new Event('input')); }
+            if (amount && opt.dataset.balance) amount.value = opt.dataset.balance;
+        });
+    });
+
     // "Request payment on save" toggles its fields (consultation form).
     document.querySelectorAll('[data-toggle-target]').forEach((box) => {
         const target = document.querySelector(box.dataset.toggleTarget);

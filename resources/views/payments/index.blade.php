@@ -3,6 +3,7 @@
 @section('content')
 <x-page-header title="Payments" subtitle="Every receipt, newest first.">
     <a href="{{ route('reports.index') }}#payments" class="btn btn-white"><i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>Export</a>
+    <a href="{{ route('mobile-money.index') }}" class="btn btn-white"><i class="fa-solid fa-mobile-screen" aria-hidden="true"></i>Mobile Money</a>
     <a href="{{ route('payments.create') }}" class="btn btn-primary"><i class="fa-solid fa-plus" aria-hidden="true"></i>Record payment</a>
 </x-page-header>
 

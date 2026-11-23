@@ -32,6 +32,9 @@
                     <dt>Patient</dt><dd>@can('view', $c->patient)<a href="{{ route('patients.show', $c->patient) }}">{{ $c->patient->name }}</a>@else{{ $c->patient->name }}@endcan<div class="small text-muted">{{ $c->patient->patient_no }}</div></dd>
                     <dt>Appointment</dt><dd><a href="{{ route('appointments.show', $c->appointment) }}">{{ $c->appointment->appointment_date->format('j M Y') }} · {{ $c->appointment->time_range }}</a></dd>
                     <dt>Doctor</dt><dd>{{ $c->doctor->name }}</dd>
+                    @if($c->recorder && $c->recorder->id !== $c->doctor->user_id)
+                        <dt>Entered by</dt><dd>{{ $c->recorder->name }} <span class="text-muted small">({{ $c->recorder->role->label() }})</span></dd>
+                    @endif
                 </dl>
             </div>
         </section>

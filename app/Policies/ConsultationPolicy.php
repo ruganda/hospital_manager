@@ -18,15 +18,17 @@ class ConsultationPolicy
         };
     }
 
-    /** Only the doctor who owns the appointment can write its notes. */
+    /** The appointment's doctor writes the notes; an admin may enter them on a doctor's behalf. */
     public function create(User $user, Appointment $appointment): bool
     {
-        return $user->hasRole('doctor') && $appointment->doctor_id === $user->doctor?->id;
+        return $user->isAdmin()
+            || ($user->hasRole('doctor') && $appointment->doctor_id === $user->doctor?->id);
     }
 
     public function update(User $user, Consultation $consultation): bool
     {
-        return $user->hasRole('doctor') && $consultation->doctor_id === $user->doctor?->id;
+        return $user->isAdmin()
+            || ($user->hasRole('doctor') && $consultation->doctor_id === $user->doctor?->id);
     }
 
     public function delete(User $user, Consultation $consultation): bool

@@ -12,6 +12,23 @@
             @csrf
             @if($consultation->exists) @method('PUT') @else <input type="hidden" name="appointment_id" value="{{ $appointment->id }}"> @endif
             <div class="card-body">
+                @if(($doctors ?? collect())->isNotEmpty())
+                    <div class="cc-callout info small mb-3"><i class="fa-solid fa-user-pen" aria-hidden="true"></i><div>You are entering these notes on a doctor's behalf. They are recorded under the doctor you choose, and you are recorded as the person who typed them.</div></div>
+                    <div class="mb-3">
+                        <label class="form-label" for="doctor_id">Doctor who saw the patient <span class="text-danger" aria-hidden="true">*</span></label>
+                        <select name="doctor_id" id="doctor_id" class="form-select @error('doctor_id') is-invalid @enderror" required>
+                            @foreach($doctors->groupBy(fn ($d) => $d->department->name) as $dept => $list)
+                                <optgroup label="{{ $dept }}">
+                                    @foreach($list as $d)
+                                        <option value="{{ $d->id }}" @selected((int) old('doctor_id', $consultation->doctor_id ?? $appointment->doctor_id) === $d->id)>{{ $d->name }} — {{ money($d->consultation_fee) }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endforeach
+                        </select>
+                        @error('doctor_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <div class="form-text">Booked with {{ $appointment->doctor->name }}. Choosing someone else moves the visit to them and bills their fee.</div>
+                    </div>
+                @endif
                 <x-textarea name="symptoms" label="Presenting symptoms" :value="$consultation->symptoms" rows="2" />
                 <x-textarea name="diagnosis" label="Diagnosis" :value="$consultation->diagnosis" rows="2" required />
                 <x-textarea name="treatment" label="Treatment given / plan" :value="$consultation->treatment" rows="3" />

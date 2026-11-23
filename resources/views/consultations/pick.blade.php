@@ -1,11 +1,27 @@
 @extends('layouts.app')
 @section('title', 'New consultation')
 @section('content')
-<x-page-header title="New consultation" subtitle="Notes belong to a visit. Pick the patient you are seeing." :back="route('consultations.index')" back-label="Consultations" />
+@php $isAdmin = auth()->user()->isAdmin(); @endphp
+<x-page-header title="New consultation" :subtitle="$isAdmin ? 'Notes belong to a visit. Pick the visit to record notes for; you can choose the doctor who saw the patient on the next screen.' : 'Notes belong to a visit. Pick the patient you are seeing.'" :back="route('consultations.index')" back-label="Consultations" />
+
+@if($isAdmin)
+    <form method="GET" action="{{ route('consultations.create') }}" class="d-flex flex-wrap align-items-end gap-2 mb-4" style="max-width:960px">
+        <div style="min-width:260px">
+            <label class="form-label" for="doctor_filter">Doctor</label>
+            <select name="doctor_id" id="doctor_filter" class="form-select" data-autosubmit>
+                <option value="">All doctors</option>
+                @foreach($doctors as $d)
+                    <option value="{{ $d->id }}" @selected($doctorFilter === $d->id)>{{ $d->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <noscript><button type="submit" class="btn btn-white">Filter</button></noscript>
+    </form>
+@endif
 
 @if($today->isEmpty() && $earlier->isEmpty())
     <div class="card">
-        <x-empty message="You have no visits waiting for notes. Patients booked with you appear here on the day of their appointment." icon="fa-notes-medical" />
+        <x-empty :message="$isAdmin ? 'No visits are waiting for notes.' : 'You have no visits waiting for notes. Patients booked with you appear here on the day of their appointment.'" icon="fa-notes-medical" />
         <div class="card-footer small text-muted">Seeing a patient without a booking? Ask reception to book them in with you first, then they will appear here.</div>
     </div>
 @else
@@ -23,7 +39,7 @@
                                 <x-avatar :user="$a->patient->user" size="sm" />
                                 <div class="flex-grow-1 min-w-0">
                                     <div class="cc-cell-main text-truncate">{{ $a->patient->name }}</div>
-                                    <div class="cc-cell-sub text-truncate">{{ $a->patient->patient_no }}@if($a->reason) · {{ $a->reason }}@endif</div>
+                                    <div class="cc-cell-sub text-truncate">@if($isAdmin){{ $a->doctor->name }} · @endif{{ $a->patient->patient_no }}@if($a->reason) · {{ $a->reason }}@endif</div>
                                 </div>
                                 <x-status-badge :status="$a->status" />
                                 <a href="{{ route('consultations.create', ['appointment_id' => $a->id]) }}" class="btn btn-outline-primary btn-sm">Write notes</a>

@@ -70,6 +70,9 @@ Route::middleware('auth')->group(function () {
 
     // ---------------------------------------------------------------- billing
     Route::middleware('role:admin,cashier')->group(function () {
+        // Mobile Money overview + "collect by MTN / Airtel" from the Payments section
+        Route::get('payments/mobile-money', [MobileMoneyController::class, 'index'])->name('mobile-money.index');
+        Route::post('payments/mobile-money', [MobileMoneyController::class, 'collect'])->middleware('throttle:10,1')->name('mobile-money.collect');
         Route::resource('payments', PaymentController::class)->except(['show']);
     });
     Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');

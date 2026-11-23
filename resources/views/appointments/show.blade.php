@@ -23,7 +23,7 @@
         @if($a->status === S::Scheduled)
             <form method="POST" action="{{ route('appointments.status', $a) }}">@csrf @method('PATCH')<input type="hidden" name="status" value="checked_in">
                 <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check" aria-hidden="true"></i>Check in</button></form>
-        @elseif($a->isEditable() && $u->hasRole('doctor'))
+        @elseif($a->isEditable() && ($u->hasRole('doctor') || $u->isAdmin()) && ! $a->consultation)
             <a href="{{ route('consultations.create', ['appointment_id' => $a->id]) }}" class="btn btn-primary"><i class="fa-solid fa-notes-medical" aria-hidden="true"></i>Start consultation</a>
         @endif
     @endcan
@@ -86,12 +86,13 @@
                 <section class="card">
                     <div class="card-header"><h2 class="card-title">Update status</h2></div>
                     <div class="card-body d-flex flex-wrap gap-2">
-                        @if($u->hasRole('doctor'))
+                        @if($u->hasRole('doctor') || $u->isAdmin())
                             <a href="{{ route('consultations.create', ['appointment_id' => $a->id]) }}" class="btn btn-white"><i class="fa-solid fa-notes-medical" aria-hidden="true"></i>Write consultation notes</a>
-                        @else
+                        @endif
+                        @unless($u->hasRole('doctor'))
                             <form method="POST" action="{{ route('appointments.status', $a) }}">@csrf @method('PATCH')<input type="hidden" name="status" value="completed">
                                 <button type="submit" class="btn btn-white"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>Mark completed</button></form>
-                        @endif
+                        @endunless
                         <form method="POST" action="{{ route('appointments.status', $a) }}" data-confirm="Mark this patient as a no-show?">@csrf @method('PATCH')<input type="hidden" name="status" value="no_show">
                             <button type="submit" class="btn btn-danger-soft"><i class="fa-solid fa-user-xmark" aria-hidden="true"></i>No show</button></form>
                     </div>

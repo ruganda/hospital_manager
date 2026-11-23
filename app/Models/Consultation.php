@@ -12,7 +12,7 @@ class Consultation extends Model
     use HasFactory;
 
     protected $fillable = [
-        'appointment_id', 'patient_id', 'doctor_id', 'symptoms', 'diagnosis', 'treatment',
+        'appointment_id', 'patient_id', 'doctor_id', 'recorded_by', 'symptoms', 'diagnosis', 'treatment',
         'prescription', 'notes', 'follow_up_date',
     ];
 
@@ -34,6 +34,12 @@ class Consultation extends Model
     public function doctor(): BelongsTo
     {
         return $this->belongsTo(Doctor::class);
+    }
+
+    /** Who typed the notes; differs from the doctor when an admin entered them on the doctor's behalf. */
+    public function recorder(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'recorded_by');
     }
 
     public function scopeVisibleTo(Builder $query, User $user): Builder

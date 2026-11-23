@@ -86,9 +86,10 @@ class ConsultationPaymentTest extends TestCase
         $page->assertDontSee(route('consultations.create', ['appointment_id' => $future->id]), false);
         $page->assertDontSee(route('consultations.create', ['appointment_id' => $someoneElses->id]), false);
 
-        // admins and patients don't write notes
-        $this->actingAs(User::where('email', 'admin@citycare.test')->first())->get(route('consultations.create'))->assertForbidden();
-        $this->actingAs(User::where('email', 'admin@citycare.test')->first())->get(route('consultations.index'))->assertDontSee('New consultation');
+        // patients and receptionists don't write notes (admins may: see AdminConsultationsAndCollectionsTest)
+        $this->actingAs(User::where('email', 'patient@citycare.test')->first())->get(route('consultations.create'))->assertForbidden();
+        $this->actingAs(User::where('email', 'patient@citycare.test')->first())->get(route('consultations.index'))->assertDontSee('New consultation');
+        $this->actingAs(User::where('email', 'reception@citycare.test')->first())->get(route('consultations.create'))->assertForbidden();
     }
 
     public function test_saving_notes_can_send_a_mobile_money_request_for_the_new_invoice(): void

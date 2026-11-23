@@ -6,6 +6,7 @@ use App\Enums\AppointmentStatus;
 use App\Enums\MobileMoneyNetwork;
 use App\Models\Appointment;
 use App\Models\Consultation;
+use App\Models\Doctor;
 use App\Models\Invoice;
 use App\Services\AppointmentService;
 use App\Services\MobileMoneyService;
@@ -51,30 +52,39 @@ class ConsultationController extends Controller
         }
 
         return view('consultations.form', [
-            'consultation' => new Consultation(['appointment_id' => $appointment->id]),
+            'consultation' => new Consultation(['appointment_id' => $appointment->id, 'doctor_id' => $appointment->doctor_id]),
             'appointment' => $appointment,
             'invoice' => null,
+            'doctors' => $this->doctorChoices($request),
         ]);
     }
 
-    /** "New consultation": the doctor picks one of their visits that still needs notes (today first, then overdue). */
+    /**
+     * "New consultation": pick a visit that still needs notes (today first, then overdue).
+     * Doctors see their own visits; an admin sees every doctor's, optionally filtered by doctor.
+     */
     private function pickAppointment(Request $request): View
     {
-        abort_unless($request->user()->hasRole('doctor'), 403, 'Consultation notes are written by the doctor who saw the patient.');
+        $user = $request->user();
+        abort_unless($user->hasRole('doctor', 'admin'), 403, 'Consultation notes are written by the doctor who saw the patient.');
+
+        $doctorFilter = $user->isAdmin() ? $request->integer('doctor_id') ?: null : ($user->doctor?->id ?? 0);
 
         $open = Appointment::query()
-            ->with('patient.user')
-            ->where('doctor_id', $request->user()->doctor?->id ?? 0)
+            ->with('patient.user', 'doctor.user')
+            ->when($doctorFilter !== null, fn ($q) => $q->where('doctor_id', $doctorFilter))
             ->whereIn('status', [AppointmentStatus::Scheduled, AppointmentStatus::CheckedIn])
             ->whereDate('appointment_date', '<=', today())
             ->doesntHave('consultation')
             ->orderByDesc('appointment_date')->orderBy('start_time')
-            ->limit(50)
+            ->limit(100)
             ->get();
 
         return view('consultations.pick', [
             'today' => $open->filter(fn ($a) => $a->appointment_date->isToday())->sortBy('start_time'),
             'earlier' => $open->reject(fn ($a) => $a->appointment_date->isToday()),
+            'doctors' => $user->isAdmin() ? Doctor::with('user')->get()->sortBy('name') : collect(),
+            'doctorFilter' => $doctorFilter,
         ]);
     }
 
@@ -85,13 +95,22 @@ class ConsultationController extends Controller
         abort_if($appointment->consultation()->exists(), 422, 'Notes already exist for this appointment.');
 
         $notes = $this->validated($request);
+        $doctorId = $this->validatedDoctor($request, $appointment->doctor_id);
         $payment = $this->validatedPaymentRequest($request);
 
-        $consultation = DB::transaction(function () use ($notes, $appointment) {
+        $consultation = DB::transaction(function () use ($notes, $appointment, $doctorId, $request) {
+            // An admin may record that a different doctor saw the patient: the visit moves to that
+            // doctor before it is completed, so the invoice is raised at the right fee.
+            if ($doctorId !== $appointment->doctor_id) {
+                $appointment->update(['doctor_id' => $doctorId]);
+                $appointment->unsetRelation('doctor');
+            }
+
             $consultation = Consultation::create($notes + [
                 'appointment_id' => $appointment->id,
                 'patient_id' => $appointment->patient_id,
-                'doctor_id' => $appointment->doctor_id,
+                'doctor_id' => $doctorId,
+                'recorded_by' => $request->user()->id,
             ]);
 
             // Writing notes completes the visit and raises the invoice for the cashier.
@@ -108,7 +127,7 @@ class ConsultationController extends Controller
     public function show(Consultation $consultation): View
     {
         $this->authorize('view', $consultation);
-        $consultation->load('patient.user', 'doctor.user', 'doctor.department', 'appointment.invoice.mobileMoneyRequests.payment');
+        $consultation->load('patient.user', 'doctor.user', 'doctor.department', 'recorder', 'appointment.invoice.mobileMoneyRequests.payment');
 
         return view('consultations.show', ['consultation' => $consultation, 'invoice' => $consultation->appointment?->invoice]);
     }
@@ -122,6 +141,7 @@ class ConsultationController extends Controller
             'consultation' => $consultation,
             'appointment' => $consultation->appointment,
             'invoice' => $consultation->appointment?->invoice,
+            'doctors' => $this->doctorChoices(request()),
         ]);
     }
 
@@ -129,8 +149,15 @@ class ConsultationController extends Controller
     {
         $this->authorize('update', $consultation);
         $notes = $this->validated($request);
+        $doctorId = $this->validatedDoctor($request, $consultation->doctor_id);
         $payment = $this->validatedPaymentRequest($request);
-        $consultation->update($notes);
+
+        DB::transaction(function () use ($consultation, $notes, $doctorId) {
+            if ($doctorId !== $consultation->doctor_id) {
+                $this->moveToDoctor($consultation, $doctorId);
+            }
+            $consultation->update($notes);
+        });
 
         $redirect = redirect()->route('consultations.show', $consultation)->with('success', 'Consultation notes updated.');
 
@@ -143,6 +170,53 @@ class ConsultationController extends Controller
         $consultation->delete();
 
         return redirect()->route('consultations.index')->with('success', 'Consultation notes deleted.');
+    }
+
+    /** Doctors to choose from on the form: only offered to admins. */
+    private function doctorChoices(Request $request)
+    {
+        return $request->user()->isAdmin() ? Doctor::with('user', 'department')->get()->sortBy('name') : collect();
+    }
+
+    /** The doctor the notes are recorded under. Doctors always record their own; admins choose. */
+    private function validatedDoctor(Request $request, int $current): int
+    {
+        if (! $request->user()->isAdmin()) {
+            return $current;
+        }
+
+        return (int) $request->validate(
+            ['doctor_id' => ['required', 'integer', 'exists:doctors,id']], [], ['doctor_id' => 'doctor']
+        )['doctor_id'];
+    }
+
+    /**
+     * Admin corrects which doctor saw the patient after the notes exist. The visit moves with them and,
+     * as long as nothing has been paid yet, the invoice is re-priced at the new doctor's fee.
+     */
+    private function moveToDoctor(Consultation $consultation, int $doctorId): void
+    {
+        $appointment = $consultation->appointment;
+        $invoice = $appointment?->invoice;
+
+        if ($invoice && (float) $invoice->amount_paid > 0) {
+            throw ValidationException::withMessages(['doctor_id' => 'This visit has already been (partly) paid, so its doctor can no longer be changed.']);
+        }
+        if ($invoice?->mobileMoneyRequests()->where('status', 'pending')->exists()) {
+            throw ValidationException::withMessages(['doctor_id' => 'A Mobile Money payment for this visit is waiting for approval. Change the doctor after it finishes.']);
+        }
+
+        $doctor = Doctor::with('user', 'department')->findOrFail($doctorId);
+        $consultation->doctor_id = $doctorId;
+        $appointment?->update(['doctor_id' => $doctorId]);
+
+        if ($invoice) {
+            $invoice->update([
+                'amount' => $doctor->consultation_fee,
+                'description' => 'Consultation – '.$doctor->name.' ('.$doctor->department->name.')',
+            ]);
+            $invoice->refreshTotals();
+        }
     }
 
     /** Optional "request payment on save" fields. Validated before anything is saved. */
